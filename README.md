@@ -13,10 +13,13 @@ Also see
 * [Cloud Datastore Local Development Server](https://cloud.google.com/datastore/docs/tools/devserver#connecting_your_app_to_the_local_development_server)
 
 ## Overview
-Proxy server and container for GCP Cloud PubSub and Cloud Datastore emulators.  The container basically runs an nginx HTTPS proxy infront of the PubSub so that even direct references to pubsub.googleapis.com:443 are redirected to the emulator.
+Proxy server and container for GCP Cloud PubSub and Cloud Datastore emulators.  In addition, the container runs an nginx HTTPS proxy infront of the PubSub|Datastore emulators so that even direct references to pubsub.googleapis.com:443 and datastore.googleapis.com:443 are redirected to the respective emulator.  
 
-These emulators normally work with gcloud-python or gcloud-java libraries. For Cloud Datastore, the environment variables are directly loaded.  For pubsub, the environment variables are onl loaded when using 'gcloud libraries' (curated, idomatic libraries) but not with raw REST APIs (com.google.api.services.pubsub.Pubsub).  To use the emulator framework with com.google.api.services.pubsub.Pubsub, you need to redirect pubsub.googleapis.com:443 to the emulator on http.  The nginx proxy here performs the translation.
+There are two modes you can use this:  
+*  A container running `gcloud emulators <pubsub|datastore>`.  You can use this mode to test your code built with [gcloud-* libraries](http://googlecloudplatform.github.io/gcloud-java/0.2.3/index.html)
+*  A container running these emulators but one that accepts traffic intended for (pubsub|datastore).googleapis.com:443.  In this mode, you can even use generic, non-gcloud libraries with this api.  For example.  you can use this with Pubsub ([com.google.api.services.pubsub](https://developers.google.com/resources/api-libraries/documentation/pubsub/v1/java/latest/)) and Datastore ([com.google.api.services.datastore](https://cloud.google.com/datastore/docs/apis/javadoc/com/google/api/services/datastore/client/package-summary))
 
+The second mode requires some significant retooling and reconfiguration on your host laptop/system (i.,e you need access to redirect DNS/hosts, install a trust chain for a CA ([CA_cert.pem](dockerimage/html/CA_crt.pem))  that issued a cert for CN=*.googleapis.com which already resides inside the container ([goog_cert.pem](dockerimage/certs/goog_crt.pem)).
 
 ![Overview](images/dia1.png)
 
@@ -30,18 +33,21 @@ To use, you need to
 ** System (not recommended as you are overriding your system's trust store; most companies would frown on this)
 
 
-
 **NOTE**  The proxy sends authentication headers to the proxy.  If you do not want to transmit the auth headers, you can override the access_token field before the API call.
+
+```
+sudo docker run -t -p 443:443 -p 8283:8283 -p 8490:8490 salrashid123/gcpemulator
+```
 
 You can also build the docker image from scratch instead of using prebuild *salrashid123/gcpemulator*
 
  
 ###DNS
-Update DNS resolution for pubsub.googleapis.com
+Update DNS resolution for pubsub.googleapis.com and datastore.googleapis.com
 
 ```
 /etc/hosts
-127.0.0.1  pubsub.googleapis.com
+127.0.0.1  pubsub.googleapis.com datastore.googleapis.com
 
 /etc/init.d/nscd restart
 ```
@@ -61,22 +67,35 @@ testeso, Feb 1, 2016, trustedCertEntry,
 Certificate fingerprint (SHA1): 32:DD:B7:7D:7C:5E:D3:93:22:2F:C4:44:B3:5D:28:E9:41:A8:96:2C
 ```
 
+Then to run
+```
+cd gcpemulator/java
+mvn install
+mvn exec:java
+```
+
 ###PYTHON
 
 ```
+cd gcpemulator/py
 virtualenv gcd
 source gcd/bin/activate
 pip install -r requirements.txt
 ```
 
-Now you need to add the CA_cert.pem to the trust store for httplib2 (used by google api client library)
+Now you need to add the CA_cert.pem to the trust store for the local virtualenv httplib2 (used by google api client library). 
+
 gcd/local/lib/python2.7/site-packages/httplib2/cacerts.txt
 
 ```
 awk 'FNR==1{print ""}1' gcd/local/lib/python2.7/site-packages/httplib2/cacerts.txt ../dockerimage/html/CA_crt.pem > /tmp/cacerts.txt  && cp /tmp/cacerts.txt gcd/local/lib/python2.7/site-packages/httplib2/cacerts.txt
 ```
 
-
+Then to run
+```
+python pubsubclient.py
+python clouddatastoreclient.py
+```
 
 ####CURL
 

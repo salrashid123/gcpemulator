@@ -1,7 +1,7 @@
 FROM ubuntu
 
 RUN apt-get -y update
-RUN apt-get install -y curl python openjdk-7-jdk supervisor build-essential ca-certificates nginx
+RUN apt-get install -y curl python openjdk-8-jdk supervisor build-essential ca-certificates nginx
 RUN mkdir -p /var/log/supervisor
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 

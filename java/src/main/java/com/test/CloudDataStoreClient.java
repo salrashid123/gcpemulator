@@ -9,21 +9,22 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.datastore.DatastoreV1.BeginTransactionRequest;
-import com.google.api.services.datastore.DatastoreV1.BeginTransactionResponse;
-import com.google.api.services.datastore.DatastoreV1.CommitRequest;
-import com.google.api.services.datastore.DatastoreV1.Entity;
-import com.google.api.services.datastore.DatastoreV1.Key;
-import com.google.api.services.datastore.DatastoreV1.LookupRequest;
-import com.google.api.services.datastore.DatastoreV1.LookupResponse;
-import com.google.api.services.datastore.DatastoreV1.Property;
-import com.google.api.services.datastore.DatastoreV1.Value;
-import com.google.api.services.datastore.client.Datastore;
-import com.google.api.services.datastore.client.DatastoreFactory;
-import com.google.api.services.datastore.client.DatastoreHelper;
-import com.google.api.services.datastore.client.DatastoreOptions;
-import com.google.protobuf.ByteString;
 
+import com.google.datastore.v1beta3.BeginTransactionRequest;
+import com.google.datastore.v1beta3.BeginTransactionResponse;
+import com.google.datastore.v1beta3.CommitRequest;
+import com.google.datastore.v1beta3.CommitResponse;
+import com.google.datastore.v1beta3.Entity;
+import com.google.datastore.v1beta3.Key;
+import com.google.datastore.v1beta3.LookupRequest;
+import com.google.datastore.v1beta3.LookupResponse;
+import com.google.datastore.v1beta3.Value;
+import com.google.datastore.v1beta3.client.Datastore;
+import com.google.datastore.v1beta3.client.DatastoreException;
+import com.google.datastore.v1beta3.client.DatastoreFactory;
+import com.google.datastore.v1beta3.client.DatastoreHelper;
+import com.google.datastore.v1beta3.client.DatastoreOptions;
+import com.google.protobuf.ByteString;
 
 
 public class CloudDataStoreClient {
@@ -56,15 +57,17 @@ public class CloudDataStoreClient {
 
 			GoogleCredential credential = GoogleCredential.getApplicationDefault();
 			  	credential.setAccessToken("foo");
-			    String datasetID = "p0";
-			    DatastoreOptions b = DatastoreHelper.getOptionsfromEnv().dataset(datasetID).credential(credential).build();
-			    	
-			    Datastore datastore =  DatastoreFactory.get().create(b);			    
+			    String myprojectId = "p0";
+
+                DatastoreOptions options = new DatastoreOptions.Builder().projectId(myprojectId).credential(credential).build();
+                Datastore datastore =   DatastoreFactory.get().create(options);
 
 			      LookupRequest.Builder lreq = LookupRequest.newBuilder();
-			      Key.Builder key = Key.newBuilder().addPathElement(
+
+			      Key.Builder key = Key.newBuilder().addPath(
 			          Key.PathElement.newBuilder().setKind("Employee").setName("aguadypoogznoqofmgmy"));
-			      lreq.addKey(key);
+
+			      lreq.addKeys(key);
 			      LookupResponse lresp = datastore.lookup(lreq.build());
 			      if (lresp.getFoundCount() > 0) {
 			        Entity e = lresp.getFound(0).getEntity();
@@ -81,11 +84,11 @@ public class CloudDataStoreClient {
 			    	  Entity entity;
 			          Entity.Builder entityBuilder = Entity.newBuilder();
 			          entityBuilder.setKey(key);
-			          entityBuilder.addProperty(Property.newBuilder()
-			              .setName("some_string")
-			              .setValue(Value.newBuilder().setStringValue("some value")));
+
+			          entityBuilder.getMutableProperties().put("some_string", Value.newBuilder().setStringValue("some value").build());
+
 			          entity = entityBuilder.build();
-			          creq.getMutationBuilder().addInsert(entity);		
+			          creq.addMutationsBuilder().setInsert(entity);		
 			          datastore.commit(creq.build());
 			      }
 
