@@ -56,7 +56,7 @@ Update DNS resolution for pubsub.googleapis.com and datastore.googleapis.com
 
 ###JAVA
 
-For java, you need to update the cacerts file used by the JRE (default password is 'changeit')
+For java, you need to update the cacerts file used by the JRE (default password is 'changeit').  Copy the bundled [root cert](dockerimage/html/CA_crt.pem) to /tmp/CA_crt.crt.  Then import the cert into your java cacerts file.
 
 ```
 $JDK_HOME/jre/lib/security
@@ -83,7 +83,7 @@ source gcd/bin/activate
 pip install -r requirements.txt
 ```
 
-Now you need to add the CA_cert.pem to the trust store for the local virtualenv httplib2 (used by google api client library). 
+Now you need to add the CA_cert.pem to the trust store for the local virtualenv httplib2 (used by google api client library).  Copy the bundled [root cert](dockerimage/html/CA_crt.pem) to /tmp/CA_crt.crt.
 
 gcd/local/lib/python2.7/site-packages/httplib2/cacerts.txt
 
