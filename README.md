@@ -1,5 +1,5 @@
 # gcpemulator
-Proxy container for Google Cloud Platofrm pubsub and datastore emulators.
+Proxy container for Google Cloud Platform pubsub and datastore emulators.
 
 
 
