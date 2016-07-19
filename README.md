@@ -26,6 +26,14 @@ The second mode requires some significant retooling and reconfiguration on your 
 
 ####Usage
 To use, you need to
+* If you want to use [gcloud-python](https://github.com/GoogleCloudPlatform/gcloud-python#google-cloud-pubsub) or [gcloud-java](https://github.com/GoogleCloudPlatform/gcloud-java#google-cloud-pubsub-alpha), 
+you do *not* need to change the hosts file or add certificates.  These libraries automatically read in environment vairables the emulators set.  Please
+be sure to run the gcloud-* sample in the same shell or set the environment variables.  
+
+If you do NOT use gcloud-* libraries but instead want to use standard, uncurated googleapi libraries like [pubsub-java](https://developers.google.com/api-client-library/java/apis/pubsub/v1),
+[pubsub-python](https://developers.google.com/api-client-library/python/apis/pubsub/v1), [datastore-java](https://cloud.google.com/datastore/reference/rest/), 
+[datastore-python](https://developers.google.com/api-client-library/python/apis/datastore/v1beta3), then you need to modify DNS and the certificate trust:
+
 *  Change the DNS or /etc/hosts file to point pubsub.googleapis.com (and if using SSL proxy for datastore, www.googleapis.com)
 *  Install the [CA_crt.pem](dockerimage/html/CA_crt.pem) to
 ** Java cacerts
@@ -56,7 +64,11 @@ Update DNS resolution for pubsub.googleapis.com and datastore.googleapis.com
 
 ###JAVA
 
-For java, you need to update the cacerts file used by the JRE (default password is 'changeit').  Copy the bundled [root cert](dockerimage/html/CA_crt.pem) to /tmp/CA_crt.crt.  Then import the cert into your java cacerts file.
+If you are using the gcloud-java libraries, simply run *gcloud beta emulators datastore start* and in the same shell run [gcloud-java for datastore](https://github.com/GoogleCloudPlatform/gcloud-java#google-cloud-datastore).
+For PubSub, run *gcloud beta emulators pubsub start* and in the same shell run [gcloud-java for pubsub](https://github.com/GoogleCloudPlatform/gcloud-java#google-cloud-pubsub-alpha)
+
+
+If you are using the raw, uncurated libraries, you need to update the cacerts file used by the JRE (default password is 'changeit').  Copy the bundled [root cert](dockerimage/html/CA_crt.pem) to /tmp/CA_crt.crt.  Then import the cert into your java cacerts file.
 
 ```
 $JDK_HOME/jre/lib/security
@@ -75,6 +87,12 @@ mvn exec:java
 ```
 
 ###PYTHON
+
+If you are using the gcloud-python libraries, simply run *gcloud beta emulators datastore start* and in the same shell run [gcloud-python datastore](https://github.com/GoogleCloudPlatform/gcloud-python#google-cloud-datastore).
+For PubSub, run *gcloud beta emulators pubsub start* and in the same shell run [gcloud-python pubsub](https://github.com/GoogleCloudPlatform/gcloud-python#google-cloud-pubsub)
+
+
+If you are using the raw, uncurated libraries, 
 
 ```
 cd gcpemulator/py
