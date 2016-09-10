@@ -24,7 +24,13 @@ The second mode requires some significant retooling and reconfiguration on your 
 ![Overview](images/dia1.png)
 
 
-####Usage
+> *NOTE*  The datastore emulator uses the [legacy mode](https://cloud.google.com/datastore/docs/tools/datastore-emulator#emulator_versions):
+```bash
+command=/root/google-cloud-sdk/bin/gcloud beta emulators datastore start --host-port 0.0.0.0:8490  --legacy
+```
+
+
+#### Usage
 To use, you need to
 * If you want to use [gcloud-python](https://github.com/GoogleCloudPlatform/gcloud-python#google-cloud-pubsub) or [gcloud-java](https://github.com/GoogleCloudPlatform/gcloud-java#google-cloud-pubsub-alpha), 
 you do *not* need to change the hosts file or add certificates.  These libraries automatically read in environment vairables the emulators set.  Please
@@ -49,7 +55,90 @@ sudo docker run -t -p 443:443 -p 8283:8283 -p 8490:8490 salrashid123/gcpemulator
 
 You can also build the docker image from scratch instead of using prebuild *salrashid123/gcpemulator*
 
+
+### gcloud-python samples
+
+If you want to use the emulators with ordinary gcloud-* libraries, thats much more straightforward:
+*  Just start the emulator without using port 443
+```
+docker run -t -p 8283:8283 -p 8490:8490 salrashid123/gcpemulator
+```
+* for Datastore, export environment variables:
+
+```bash
+export DATASTORE_EMULATOR_HOST=<docker_host_ip>:8490
+export DATASTORE_HOST=http://<docker_host_ip>:8490
+```
+* run a sample code as such:
+
+```python
+import gcloud
+from gcloud.datastore.client import Client
+from gcloud.datastore.entity import Entity
+from gcloud.datastore.key import Key
+
+def datastore(): 
+  try: 
+    ds_target = os.environ['DATASTORE_EMULATOR_HOST']
+    print ds_target
+    logging.info("DATASTORE_EMULATOR_HOST " + pubsub_target)
+  except KeyError:
+    logging.error("DATASTORE_EMULATOR_HOST env variable not found")  
+  ds = gcloud.datastore.client.Client(project='p0')
+  k = ds.key('Employee', 5629499534213120)
+  result = ds.get(k)
+  if (result is None):
+    return "Key Not found"
+  logging.info("Found entity: " + str(result.key.id))
+```
+> Note:  gcloud-python's legacy datastore implementation seems to not use the emulator's environment project but rather reads the project
+> information passed by the client.  That is, if my client uses *projectA* in the local gcloud and the emulator's gcloud is set to *projectB*,
+> a datastore client call shows the following error:
+
+```
+[datastore] INFO: Hosted project, *projectB* , does not match requested project, *projectA*.
+```
+
+Possible solutions is to either build the emulator docker image and specify the environment variable:
+```Dockerfile
+  ENV CLOUDSDK_CORE_PROJECT projectA
+```
+or set the client to use the remote project
+```
+ds = gcloud.datastore.client.Client(project='projectA')
+```
+
+For Pubsub,
+
+* export the variables
+```bash
+export PUBSUB_EMULATOR_HOST=<docker_host_ip>:8283
+```
+* execute a client like:
+
+```python
+def pubsub():
+  try: 
+    pubsub_target = os.environ['PUBSUB_EMULATOR_HOST']
+    logging.info("PUBSUB_EMULATOR_HOST " + pubsub_target)
+  except KeyError:
+    logging.error("PUBSUB_EMULATOR_HOST env variable not found")  
+  client = gcloud.pubsub.client.Client()
+  try: 
+    topic = client.topic('topic_name')
+    topic.create()
+  except:
+    logging.error("Unable to create topic " )
+  topics, token = client.list_topics()
+  r = ''
+  for topic in topics:
+    r = r + topic.name + '<br/>'
+    logging.info(topic.name)
+```
  
+Thats it.  You can ignore the following sections because it only relevant if you want to override the pubsub/datastore endpoint for legacy google APIs (non-gcloud-*).
+
+
 ###DNS
 Update DNS resolution for pubsub.googleapis.com and datastore.googleapis.com
 

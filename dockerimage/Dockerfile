@@ -18,7 +18,7 @@ ENV CLOUDSDK_CORE_PROJECT p0
 
 RUN /root/google-cloud-sdk/bin/gcloud config set project $CLOUDSDK_CORE_PROJECT
 RUN /root/google-cloud-sdk/bin/gcloud components install beta
-RUN /root/google-cloud-sdk/bin/gcloud components install gcd-emulator pubsub-emulator
+RUN /root/google-cloud-sdk/bin/gcloud components install cloud-datastore-emulator gcd-emulator pubsub-emulator
 
 EXPOSE 443 8283 8490 
 
