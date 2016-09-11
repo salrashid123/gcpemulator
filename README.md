@@ -61,7 +61,7 @@ You can also build the docker image from scratch instead of using prebuild *salr
 If you want to use the emulators with ordinary gcloud-* libraries, thats much more straightforward:
 *  Just start the emulator without using port 443
 ```
-docker run -t -p 8283:8283 -p 8490:8490 salrashid123/gcpemulator
+docker run -e CLOUDSDK_CORE_PROJECT=$(gcloud config list --format='value(core.project)')  -p 8283:8283 -p 8490:8490 salrashid123/gcpemulator 
 ```
 * for Datastore, export environment variables:
 
@@ -84,28 +84,12 @@ def datastore():
     logging.info("DATASTORE_EMULATOR_HOST " + pubsub_target)
   except KeyError:
     logging.error("DATASTORE_EMULATOR_HOST env variable not found")  
-  ds = gcloud.datastore.client.Client(project='p0')
+  ds = gcloud.datastore.client.Client()
   k = ds.key('Employee', 5629499534213120)
   result = ds.get(k)
   if (result is None):
     return "Key Not found"
   logging.info("Found entity: " + str(result.key.id))
-```
-> Note:  gcloud-python's legacy datastore implementation seems to not use the emulator's environment project but rather reads the project
-> information passed by the client.  That is, if my client uses *projectA* in the local gcloud and the emulator's gcloud is set to *projectB*,
-> a datastore client call shows the following error:
-
-```
-[datastore] INFO: Hosted project, *projectB* , does not match requested project, *projectA*.
-```
-
-Possible solutions is to either build the emulator docker image and specify the environment variable:
-```Dockerfile
-  ENV CLOUDSDK_CORE_PROJECT projectA
-```
-or set the client to use the remote project
-```
-ds = gcloud.datastore.client.Client(project='projectA')
 ```
 
 For Pubsub,
