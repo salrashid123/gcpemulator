@@ -122,6 +122,15 @@ def pubsub():
  
 Thats it.  You can ignore the following sections because it only relevant if you want to override the pubsub/datastore endpoint for legacy google APIs (non-gcloud-*).
 
+> *Note*: if you want to run code in a container but need access to the emulator container, you will need to pass in some environment variables
+eg:
+```
+docker run -t -e CLOUDSDK_CORE_PROJECT=$(gcloud config list --format='value(core.project)') \ 
+     -e DATASTORE_HOST=http://emulator_ip:8490 \
+     -e DATASTORE_EMULATOR_HOST=emulator_iip:8490  \
+     -e PUBSUB_EMULATOR_HOST=emulator_ip:8283 \
+     your_code_container
+```
 
 ###DNS
 Update DNS resolution for pubsub.googleapis.com and datastore.googleapis.com
